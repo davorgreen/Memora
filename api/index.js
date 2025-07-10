@@ -2,6 +2,7 @@ import express from 'express'
 import dotenv from 'dotenv'
 import mongoose from 'mongoose'
 import authRoute from './routes/auth.js'
+import cookieParser from 'cookie-parser'
 const app = express();
 dotenv.config();
 
@@ -15,6 +16,7 @@ const connect = async () => {
 }
 
 //middlewares
+app.use(cookieParser());
 app.use(express.json());
 app.use("/auth", authRoute);
 
