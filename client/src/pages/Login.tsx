@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import api from '../services/axios';
+import { toast } from 'react-toastify';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import axios from 'axios';
 
 interface LoginForm {
 	username: string;
@@ -33,10 +36,17 @@ const Login = () => {
 		}
 		setLoadingForm(true);
 		try {
-			const res = await api.post('/auth/login', formData);
-			console.log(res.data);
+			await api.post('/auth/login', formData);
+			toast.success('Login successful!');
 		} catch (error) {
-			setError(error);
+			if (axios.isAxiosError(error)) {
+				const message =
+					error.response?.data?.message || error.message;
+				setError(message);
+				toast.error(message);
+			}
+		} finally {
+			setLoadingForm(false);
 		}
 	};
 	return (
@@ -61,18 +71,27 @@ const Login = () => {
 							className={inputStyle}
 						/>
 					</div>
-					<div className='flex flex-col w-[70%]'>
+					<div className='flex flex-col w-[70%] relative'>
 						<label className='font-semibold text-amber-700'>
 							Password
 						</label>
 						<input
-							type='password'
+							type={showPassword ? 'text' : 'password'}
 							name='password'
 							value={formData.password}
 							onChange={handleChangeInput}
 							required
 							className={inputStyle}
 						/>
+						<span
+							className='text-amber-800 cursor-pointer absolute top-7 right-2'
+							onClick={() => setShowPassword((prev) => !prev)}>
+							{showPassword ? (
+								<FaEyeSlash size={30} />
+							) : (
+								<FaEye size={30} />
+							)}
+						</span>
 					</div>
 					{error && (
 						<p className='text-red-600 text-sm mt-1'>{error}</p>
