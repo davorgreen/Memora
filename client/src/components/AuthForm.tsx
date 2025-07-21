@@ -1,10 +1,11 @@
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import api from '../services/axios';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import ClipLoader from 'react-spinners/ClipLoader';
+import { useUser } from '../hooks/useUser';
 
 interface AuthFormProps {
 	type: 'login' | 'register';
@@ -24,6 +25,8 @@ const AuthForm = ({ type }: AuthFormProps) => {
 	const [loadingForm, setLoadingForm] = useState<boolean>(false);
 	const [error, setError] = useState<null | string>(null);
 	const [showPassword, setShowPassword] = useState<boolean>(false);
+	const { login } = useUser();
+	const navigate = useNavigate();
 	const isRegister = type === 'register';
 	const inputStyle =
 		'w-full px-4 py-2 border bg-white text-black border-amber-500 rounded focus:outline-none focus:ring-2 focus:ring-amber-700';
@@ -56,10 +59,17 @@ const AuthForm = ({ type }: AuthFormProps) => {
 						username: formData.username,
 						password: formData.password,
 				  };
-			await api.post(endpoint, payload);
+			const userRes = await api.post(endpoint, payload);
+			const { details, isAdmin } = userRes.data;
 			toast.success(
 				`${isRegister ? 'Registration' : 'Login'} successful!`
 			);
+			if (isRegister) {
+				navigate('/login');
+			} else {
+				login({ ...details, isAdmin });
+				navigate('/');
+			}
 		} catch (error) {
 			if (axios.isAxiosError(error)) {
 				const message =
