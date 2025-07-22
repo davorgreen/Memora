@@ -31,7 +31,7 @@ export const login = async (req, res, next) => {
         const token = jwt.sign(
             { id: user._id, isAdmin: user.isAdmin },
             process.env.JWT_ACCESS_SECRET,
-            { expiresIn: '15m' });
+            { expiresIn: '2m' });
 
         const refreshToken = jwt.sign(
             { id: user._id, isAdmin: user.isAdmin },
@@ -44,7 +44,7 @@ export const login = async (req, res, next) => {
         res
             .cookie('access_token', token, {
                 httpOnly: true,
-                maxAge: 15 * 60 * 1000,
+                maxAge: 2 * 60 * 1000,
             })
             .cookie('refresh_token', refreshToken, {
                 httpOnly: true,
@@ -67,3 +67,42 @@ export const logout = (req, res) => {
         })
         .status(200).json({ message: 'Logged out successfully' });
 }
+
+export const refreshToken = (req, res, next) => {
+    const refreshToken = req.cookies.refresh_token;
+
+    if (!refreshToken) {
+        return next(createError(401, 'Refresh token missing!'));
+    }
+
+    jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, (err, user) => {
+        if (err) {
+            return next(createError(403, "Refresh token invalid or expired"));
+        }
+
+        const newAccessToken = jwt.sign(
+            { id: user.id, isAdmin: user.isAdmin },
+            process.env.JWT_ACCESS_SECRET,
+            { expiresIn: '15m' }
+        );
+
+        const newRefreshToken = jwt.sign(
+            { id: user.id, isAdmin: user.isAdmin },
+            process.env.JWT_REFRESH_SECRET,
+            { expiresIn: '7d' }
+        );
+
+        res
+            .cookie('access_token', newAccessToken, {
+                httpOnly: true,
+                maxAge: 15 * 60 * 1000,
+            })
+            .cookie('refresh_token', newRefreshToken, {
+                httpOnly: true,
+                maxAge: 7 * 24 * 60 * 60 * 1000,
+            })
+            .status(200)
+            .json({ message: "Access token refreshed" });
+    });
+};
+
