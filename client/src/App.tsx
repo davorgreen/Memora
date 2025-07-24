@@ -9,6 +9,15 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import { ToastContainer } from 'react-toastify';
 
+function AxiosInterceptorWrapper({
+	children,
+}: {
+	children: React.ReactNode;
+}) {
+	useAxiosInterceptors();
+	return <>{children}</>;
+}
+
 function App() {
 	return (
 		<>
@@ -24,15 +33,6 @@ function App() {
 			</Router>
 		</>
 	);
-}
-
-function AxiosInterceptorWrapper({
-	children,
-}: {
-	children: React.ReactNode;
-}) {
-	useAxiosInterceptors();
-	return <>{children}</>;
 }
 
 export default App;
