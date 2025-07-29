@@ -5,6 +5,7 @@ import { FaRegBell } from 'react-icons/fa';
 import { TbMessages } from 'react-icons/tb';
 import Profile from '../assets/profilepicture.jpg';
 import PostCard from '../components/PostCard';
+import PeopleMayYouKnow from '../components/PeopleMayYouKnow';
 
 const Home = () => {
 	const navigate = useNavigate();
@@ -35,6 +36,7 @@ const Home = () => {
 			</header>
 			<main className='pt-16 mx-auto px-4 mt-6'>
 				<section>
+					<PeopleMayYouKnow />
 					<div className='flex items-center justify-center mb-4'>
 						{user && (
 							<div className='flex flex-col md:flex-row items-center gap-6 mt-4 mb-4 text-center'>

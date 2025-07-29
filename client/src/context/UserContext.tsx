@@ -7,6 +7,7 @@ export interface UserContextType {
 	login: (user: User) => void;
 	logout: () => void;
 	loading: boolean;
+	addFriend: (friendId: string) => void;
 }
 
 export const UserContext = createContext<UserContextType | undefined>(

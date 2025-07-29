@@ -19,3 +19,38 @@ export const getUsers = async (req, res, next) => {
         next(error);
     }
 }
+
+//add friend
+export const addFriend = async (req, res, next) => {
+    const userId = req.user.id;
+    const friendId = req.body.friendId;
+
+    if (userId === friendId) return res.status(400).json({ message: "You can't add yourself!" });
+    try {
+        const user = await User.findById(userId);
+        if (user.friends.includes(friendId)) {
+            return res.status(400).json({ message: "He's already a friend!" });
+        }
+        user.friends.push(friendId);
+        await user.save();
+        res.status(200).json({ message: "Friend added!" });
+    } catch (err) {
+        next(err);
+    }
+}
+
+//remove friend
+export const removeFriend = async (req, res, next) => {
+    const userId = req.user.id;
+    const friendId = req.body.friendId;
+    try {
+        const user = await User.findById(userId);
+        user.friends = user.friends.filter(id => id.toString() !== friendId);
+        await user.save();
+        res.status(200).json({ message: "Friend removed!" });
+    } catch (err) {
+        next(err);
+    }
+};
+
+

@@ -31,9 +31,22 @@ const UserProvider = ({ children }: UserProviderProps) => {
 		localStorage.removeItem('user');
 	};
 
+	const addFriend = (friendId: string) => {
+		setUser((prevUser) =>
+			prevUser
+				? {
+						...prevUser,
+						friends: prevUser.friends
+							? [...prevUser.friends, friendId]
+							: [friendId],
+				  }
+				: null
+		);
+	};
+
 	return (
 		<UserContext.Provider
-			value={{ user, login, logout, setUser, loading }}>
+			value={{ user, login, logout, setUser, loading, addFriend }}>
 			{children}
 		</UserContext.Provider>
 	);
