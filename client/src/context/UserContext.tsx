@@ -6,8 +6,11 @@ export interface UserContextType {
 	setUser: React.Dispatch<React.SetStateAction<User | null>>;
 	login: (user: User) => void;
 	logout: () => void;
+	myFriends: User[];
+	addFriend: (friendId: string) => Promise<void>;
+	removeFriend: (friendId: string) => Promise<void>;
 	loading: boolean;
-	addFriend: (friendId: string) => void;
+	error: string | null;
 }
 
 export const UserContext = createContext<UserContextType | undefined>(

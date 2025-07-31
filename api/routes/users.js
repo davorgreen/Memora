@@ -1,5 +1,5 @@
 import express from "express"
-import { addFriend, getUser, getUsers, removeFriend } from "../controllers/user.controller.js"
+import { addFriend, getAllFriends, getUser, getUsers, removeFriend } from "../controllers/user.controller.js"
 import { verifyToken } from "../utils/verifyToken.js";
 
 
@@ -13,4 +13,6 @@ router.get("/", verifyToken, getUsers);
 router.post('/add-friend', verifyToken, addFriend);
 //remove friend
 router.post('/remove-friend', verifyToken, removeFriend);
+//getAllFriends
+router.get('/:id/friends', verifyToken, getAllFriends);
 export default router;

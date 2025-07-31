@@ -5,11 +5,13 @@ import { FaRegBell } from 'react-icons/fa';
 import { TbMessages } from 'react-icons/tb';
 import Profile from '../assets/profilepicture.jpg';
 import PostCard from '../components/PostCard';
-import PeopleMayYouKnow from '../components/PeopleMayYouKnow';
+import PeopleMayYouKnow from '../components/PeopleMayYouKnow/PeopleMayYouKnow';
+import { useState } from 'react';
 
 const Home = () => {
 	const navigate = useNavigate();
-	const { user } = useUser();
+	const [isOpen, setIsOpen] = useState(false);
+	const { user, myFriends, removeFriend } = useUser();
 
 	return (
 		<div className='min-h-screen bg-gray-100'>
@@ -65,10 +67,40 @@ const Home = () => {
 											</p>
 										</div>
 										<div className='flex flex-col items-center'>
-											<p>20</p>
-											<p className='text-sm text-gray-500'>
-												following
-											</p>
+											<button
+												onClick={() => setIsOpen((prev) => !prev)}
+												className='flex flex-col items-center text-center cursor-pointer'>
+												<p className='text-lg font-semibold'>
+													{myFriends.length}
+												</p>
+												<p className='text-sm text-gray-500'>
+													Following
+												</p>
+											</button>
+
+											{isOpen && (
+												<div className='mt-2 w-64 bg-blue-200 p-4 rounded-2xl shadow-lg flex flex-col gap-4'>
+													{myFriends.map((fr) => (
+														<div
+															key={fr._id}
+															className='flex justify-between items-center border-b border-gray-100 pb-2'>
+															<p className='text-gray-800 font-medium'>
+																{fr.username}
+															</p>
+															<button
+																onClick={() => removeFriend(fr._id)}
+																className='text-sm w-20 h-10 rounded-xl text-white font-semibold bg-red-500 hover:bg-red-700 transition'>
+																Remove
+															</button>
+														</div>
+													))}
+													{myFriends.length === 0 && (
+														<p className='text-sm text-gray-400 text-center'>
+															No friends yet
+														</p>
+													)}
+												</div>
+											)}
 										</div>
 									</div>
 								</div>
