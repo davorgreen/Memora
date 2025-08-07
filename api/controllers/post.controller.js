@@ -1,6 +1,7 @@
 import Post from "../models/Post.js"
-import cloudinary from "../utils/cloudinary.js";
-import uploadBase64Image from "../utils/cloudinary.js"
+import User from "../models/User.js"
+import cloudinary, { uploadBase64Image } from "../utils/cloudinary.js";
+
 
 //create post
 export const createPost = async (req, res, next) => {
@@ -64,10 +65,34 @@ export const deletePost = async (req, res, next) => {
         if (post.image?.public_id) {
             await cloudinary.uploader.destroy(post.image.public_id);
         }
-
         await Post.findByIdAndDelete(req.params.id);
         res.status(200).json({ message: "Post deleted successfully!" });
     } catch (error) {
         next(error);
+    }
+}
+
+//get me all my posts and my friends' posts
+export const getPosts = async (req, res, next) => {
+    try {
+        const userId = req.params.userId;
+
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: "User not found!" });
+
+        const feedUserIds = [user._id, ...user.friends];
+
+        const posts = await Post.find({ userId: { $in: feedUserIds } })
+            .sort({ createdAt: -1 })
+            .populate("userId", "username");
+
+        const uniquePosts = posts.filter(
+            (post, index, self) =>
+                index === self.findIndex((p) => p._id.toString() === post._id.toString())
+        );
+
+        res.status(200).json(uniquePosts);
+    } catch (error) {
+        next(error)
     }
 }

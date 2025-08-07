@@ -7,10 +7,12 @@ import Profile from '../assets/profilepicture.jpg';
 import PostCard from '../components/PostCard';
 import PeopleMayYouKnow from '../components/PeopleMayYouKnow/PeopleMayYouKnow';
 import { useState } from 'react';
+import CreatePost from '../components/CreatePost/CreatePost';
 
 const Home = () => {
 	const navigate = useNavigate();
-	const [isOpen, setIsOpen] = useState(false);
+	const [isOpen, setIsOpen] = useState<boolean>(false);
+	const [isOpenModal, setIsOpenModal] = useState<boolean>(false);
 	const { user, myFriends, removeFriend } = useUser();
 
 	return (
@@ -108,14 +110,20 @@ const Home = () => {
 						)}
 					</div>
 					<div className='flex justify-center'>
-						<button className='text-xl font-semibold mb-4 rounded-xl h-16 bg-blue-400 w-full sm:w-2/3 md:w-1/2'>
+						<button
+							onClick={() => setIsOpenModal(!isOpenModal)}
+							className='text-xl font-semibold mb-4 rounded-xl h-16 bg-blue-400 w-full sm:w-2/3 md:w-1/2'>
 							<p className='text-white text-2xl sm:text-3xl'>
 								+ Create post
 							</p>
 						</button>
 					</div>
+					{isOpenModal && (
+						<div>
+							<CreatePost setIsOpenModal={setIsOpenModal} />
+						</div>
+					)}
 					<div className='w-full max-w-xl mx-auto flex flex-col gap-20 p-4'>
-						<PostCard />
 						<PostCard />
 					</div>
 				</section>

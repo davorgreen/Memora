@@ -38,7 +38,6 @@ const UserProvider = ({ children }: UserProviderProps) => {
 		setLoading(true);
 		try {
 			const { data } = await getFriends(user._id);
-			console.log(data);
 			setMyFriends(data);
 		} catch (err) {
 			if (axios.isAxiosError(err)) {
@@ -56,7 +55,7 @@ const UserProvider = ({ children }: UserProviderProps) => {
 
 	useEffect(() => {
 		if (user) fetchFriends();
-	}, [myFriends, user?._id]);
+	}, [user?._id]);
 
 	const addFriend = async (friendId: string) => {
 		try {
