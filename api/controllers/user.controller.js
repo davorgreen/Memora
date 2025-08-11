@@ -33,7 +33,8 @@ export const addFriend = async (req, res, next) => {
         }
         user.friends.push(friendId);
         await user.save();
-        res.status(200).json({ message: "Friend added!" });
+        const populatedUser = await User.findById(userId).populate('friends');
+        res.status(200).json({ friends: populatedUser.friends });
     } catch (err) {
         next(err);
     }

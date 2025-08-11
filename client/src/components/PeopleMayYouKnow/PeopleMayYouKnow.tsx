@@ -2,9 +2,11 @@ import { useUser } from '../../hooks/useUser';
 import Profile from '../../assets/profilepicture.jpg';
 import axios from 'axios';
 import { usePeopleYouMayKnow } from './usePeopleMayYouKnow';
+import { useFriends } from '../../hooks/useFriends';
 
 const PeopleMayYouKnow = () => {
-	const { user, addFriend } = useUser();
+	const { addFriend } = useFriends();
+	const { user } = useUser();
 	const { people, loading, error } = usePeopleYouMayKnow(user);
 
 	if (loading) return <p>Loading...</p>;

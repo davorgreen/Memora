@@ -1,17 +1,19 @@
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../hooks/useUser';
 import Profile from '../assets/profilepicture.jpg';
 import PostCard from '../components/PostCard';
 import PeopleMayYouKnow from '../components/PeopleMayYouKnow/PeopleMayYouKnow';
 import { useState } from 'react';
 import CreatePost from '../components/CreatePost/CreatePost';
 import Navbar from '../components/Navbar';
+import { useFriends } from '../hooks/useFriends';
+import { useUser } from '../hooks/useUser';
 
 const Home = () => {
 	const navigate = useNavigate();
 	const [isOpen, setIsOpen] = useState<boolean>(false);
 	const [isOpenModal, setIsOpenModal] = useState<boolean>(false);
-	const { user, myFriends, removeFriend } = useUser();
+	const { user } = useUser();
+	const { myFriends, removeFriend } = useFriends();
 
 	return (
 		<div className='min-h-screen bg-gray-100'>

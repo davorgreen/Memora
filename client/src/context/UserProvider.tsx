@@ -2,13 +2,6 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { UserContext } from './UserContext';
 import api from '../services/axios';
 import type { User } from '../types/User';
-import {
-	addFriends,
-	getFriends,
-	removeFriends,
-} from '../services/friendsService';
-import { toast } from 'react-toastify';
-import axios from 'axios';
 import type { Post } from '../types/Post';
 interface UserProviderProps {
 	children: ReactNode;
@@ -21,7 +14,6 @@ const UserProvider = ({ children }: UserProviderProps) => {
 	});
 	const [error, setError] = useState('');
 	const [loading, setLoading] = useState(false);
-	const [myFriends, setMyFriends] = useState<User[]>([]);
 	const [posts, setPosts] = useState<Post[] | null>([]);
 
 	const login = (userData: User) => {
@@ -35,31 +27,16 @@ const UserProvider = ({ children }: UserProviderProps) => {
 		localStorage.removeItem('user');
 	};
 
-	const fetchFriends = async () => {
-		if (!user?._id) return;
-		setLoading(true);
-		try {
-			const { data } = await getFriends(user._id);
-			setMyFriends(data);
-		} catch (err) {
-			if (axios.isAxiosError(err)) {
-				toast.error(err.response?.data?.message || err.message);
-				setError(err.response?.data?.message || err.message);
-			} else {
-				throw new Error(
-					'Something went wrong while adding a friend.'
-				);
-			}
-		} finally {
-			setLoading(false);
-		}
-	};
-
 	const getPosts = async () => {
 		if (!user?._id) return;
-		const { data } = await api.get(`/posts/feed/${user?._id}`);
-		console.log(data);
-		setPosts(data ?? []);
+
+		try {
+			const { data } = await api.get(`/posts/feed/${user._id}`);
+			console.log(data);
+			setPosts(data ?? []);
+		} catch (error) {
+			console.error('Failed to fetch posts:', error);
+		}
 	};
 
 	const addPost = (newPost: Post) => {
@@ -74,54 +51,9 @@ const UserProvider = ({ children }: UserProviderProps) => {
 
 	useEffect(() => {
 		if (user) {
-			fetchFriends();
 			getPosts();
 		}
 	}, [user?._id]);
-
-	const addFriend = async (friendId: string) => {
-		try {
-			await addFriends(friendId);
-			toast.success('Friend added!');
-			if (user) {
-				login({
-					...user,
-					friends: [...(user.friends || []), friendId],
-				});
-			}
-			setMyFriends((prev) => [...prev, { _id: friendId } as User]);
-		} catch (err) {
-			if (axios.isAxiosError(err)) {
-				toast.error(err.response?.data?.message || err.message);
-				setError(err.response?.data?.message || err.message);
-			} else {
-				toast.error('Something went wrong while adding a friend.');
-			}
-		}
-	};
-
-	const removeFriend = async (friendId: string) => {
-		try {
-			await removeFriends(friendId);
-			toast.success('Friend removed!');
-			setMyFriends((prev) => prev.filter((f) => f._id !== friendId));
-			if (user) {
-				const updatedFriends =
-					user.friends?.filter((id) => id !== friendId) || [];
-				login({
-					...user,
-					friends: updatedFriends,
-				});
-			}
-		} catch (err) {
-			if (axios.isAxiosError(err)) {
-				toast.error(err.response?.data?.message || err.message);
-				setError(err.response?.data?.message || err.message);
-			} else {
-				toast.error('Failed to remove friend.');
-			}
-		}
-	};
 
 	return (
 		<UserContext.Provider
@@ -130,9 +62,6 @@ const UserProvider = ({ children }: UserProviderProps) => {
 				login,
 				logout,
 				setUser,
-				addFriend,
-				removeFriend,
-				myFriends,
 				loading,
 				error,
 				posts,
