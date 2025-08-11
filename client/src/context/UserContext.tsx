@@ -1,5 +1,6 @@
 import { createContext } from 'react';
 import type { User } from '../types/User';
+import type { Post } from '../types/Post';
 
 export interface UserContextType {
 	user: User | null;
@@ -11,6 +12,8 @@ export interface UserContextType {
 	removeFriend: (friendId: string) => Promise<void>;
 	loading: boolean;
 	error: string | null;
+	posts: Post[] | null;
+	addPost: (newPost: Post) => void;
 }
 
 export const UserContext = createContext<UserContextType | undefined>(

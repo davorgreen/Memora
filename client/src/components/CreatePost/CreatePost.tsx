@@ -15,6 +15,7 @@ const CreatePost = ({ setIsOpenModal }: CreatePostProps) => {
 	const [error, setError] = useState<string>('');
 	const { user } = useUser();
 	const [preview, setPreview] = useState<string | null>(null);
+	const { addPost } = useUser();
 
 	const resetForm = () => {
 		setImage(null);
@@ -54,7 +55,9 @@ const CreatePost = ({ setIsOpenModal }: CreatePostProps) => {
 			...(image && { image }),
 		};
 		try {
-			await api.post('/posts/create-post', postData);
+			const res = await api.post('/posts/create-post', postData);
+			console.log(res.data);
+			addPost(res.data);
 			toast.success('Post successfully created!');
 			resetForm();
 		} catch (err) {
@@ -72,9 +75,6 @@ const CreatePost = ({ setIsOpenModal }: CreatePostProps) => {
 
 	return (
 		<div className='max-w-2xl mx-auto px-4 py-6'>
-			<h1 className='text-3xl font-bold mb-6 text-center text-blue-500'>
-				Create New Post
-			</h1>
 			<form
 				onSubmit={handleSubmit}
 				className='bg-white p-6 rounded-xl shadow-md space-y-4'>

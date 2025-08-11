@@ -7,7 +7,6 @@ export interface CreatePostData {
 export interface CreatePostProps {
 	setIsOpenModal: (open: boolean) => void;
 }
-
 export interface Post {
 	_id: string;
 	userId: {

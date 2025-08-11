@@ -9,6 +9,7 @@ import {
 } from '../services/friendsService';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import type { Post } from '../types/Post';
 interface UserProviderProps {
 	children: ReactNode;
 }
@@ -21,6 +22,7 @@ const UserProvider = ({ children }: UserProviderProps) => {
 	const [error, setError] = useState('');
 	const [loading, setLoading] = useState(false);
 	const [myFriends, setMyFriends] = useState<User[]>([]);
+	const [posts, setPosts] = useState<Post[] | null>([]);
 
 	const login = (userData: User) => {
 		setUser(userData);
@@ -53,8 +55,28 @@ const UserProvider = ({ children }: UserProviderProps) => {
 		}
 	};
 
+	const getPosts = async () => {
+		if (!user?._id) return;
+		const { data } = await api.get(`/posts/feed/${user?._id}`);
+		console.log(data);
+		setPosts(data ?? []);
+	};
+
+	const addPost = (newPost: Post) => {
+		setPosts((prev) => [
+			{
+				...newPost,
+				userId: { username: user?.username || 'Unknown' },
+			},
+			...(prev || []),
+		]);
+	};
+
 	useEffect(() => {
-		if (user) fetchFriends();
+		if (user) {
+			fetchFriends();
+			getPosts();
+		}
 	}, [user?._id]);
 
 	const addFriend = async (friendId: string) => {
@@ -113,6 +135,8 @@ const UserProvider = ({ children }: UserProviderProps) => {
 				myFriends,
 				loading,
 				error,
+				posts,
+				addPost,
 			}}>
 			{children}
 		</UserContext.Provider>
