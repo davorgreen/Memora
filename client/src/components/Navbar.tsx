@@ -4,10 +4,26 @@ import { TbMessages } from 'react-icons/tb';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../hooks/useUser';
 import { toast } from 'react-toastify';
+import { ClipLoader } from 'react-spinners';
 
 const Navbar = () => {
 	const navigate = useNavigate();
-	const { logout } = useUser();
+	const { logout, errorUser, loadingUser } = useUser();
+
+	if (loadingUser) {
+		return (
+			<div className='flex justify-center items-center h-64'>
+				<ClipLoader color='#229ac5' size={50} />
+			</div>
+		);
+	}
+
+	if (errorUser)
+		return (
+			<p className='font-bold text-2xl text-red-600'>
+				Error: {errorUser}
+			</p>
+		);
 
 	const handleLogout = () => {
 		logout();

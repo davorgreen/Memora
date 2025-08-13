@@ -5,6 +5,8 @@ export interface FriendsContextType {
 	myFriends: User[];
 	addFriend: (friendId: string) => Promise<void>;
 	removeFriend: (friendId: string) => Promise<void>;
+	loadingFriends: boolean;
+	errorFriends: string | null;
 }
 
 export const FriendsContext = createContext<

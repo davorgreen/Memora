@@ -1,8 +1,9 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { UserContext } from './UserContext';
 import api from '../services/axios';
 import type { User } from '../types/User';
-import type { Post } from '../types/Post';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 interface UserProviderProps {
 	children: ReactNode;
 }
@@ -12,9 +13,8 @@ const UserProvider = ({ children }: UserProviderProps) => {
 		const storedUser = localStorage.getItem('user');
 		return storedUser ? JSON.parse(storedUser) : null;
 	});
-	const [error, setError] = useState('');
-	const [loading, setLoading] = useState(false);
-	const [posts, setPosts] = useState<Post[] | null>([]);
+	const [errorUser, setErrorUser] = useState('');
+	const [loadingUser, setLoadingUser] = useState(false);
 
 	const login = (userData: User) => {
 		setUser(userData);
@@ -22,38 +22,20 @@ const UserProvider = ({ children }: UserProviderProps) => {
 	};
 
 	const logout = async () => {
-		await api.post('/auth/logout');
-		setUser(null);
-		localStorage.removeItem('user');
-	};
-
-	const getPosts = async () => {
-		if (!user?._id) return;
-
+		setLoadingUser(true);
 		try {
-			const { data } = await api.get(`/posts/feed/${user._id}`);
-			console.log(data);
-			setPosts(data ?? []);
-		} catch (error) {
-			console.error('Failed to fetch posts:', error);
+			await api.post('/auth/logout');
+			setUser(null);
+			localStorage.removeItem('user');
+		} catch (err) {
+			if (axios.isAxiosError(err)) {
+				toast.error(err.response?.data?.message || err.message);
+				setErrorUser(err.response?.data?.message || err.message);
+			}
+		} finally {
+			setLoadingUser(false);
 		}
 	};
-
-	const addPost = (newPost: Post) => {
-		setPosts((prev) => [
-			{
-				...newPost,
-				userId: { username: user?.username || 'Unknown' },
-			},
-			...(prev || []),
-		]);
-	};
-
-	useEffect(() => {
-		if (user) {
-			getPosts();
-		}
-	}, [user?._id]);
 
 	return (
 		<UserContext.Provider
@@ -62,10 +44,8 @@ const UserProvider = ({ children }: UserProviderProps) => {
 				login,
 				logout,
 				setUser,
-				loading,
-				error,
-				posts,
-				addPost,
+				loadingUser,
+				errorUser,
 			}}>
 			{children}
 		</UserContext.Provider>

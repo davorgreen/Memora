@@ -7,6 +7,8 @@ import type {
 	CreatePostData,
 	CreatePostProps,
 } from '../../types/Post';
+import { ClipLoader } from 'react-spinners';
+import { usePosts } from '../../hooks/UsePosts';
 
 const CreatePost = ({ setIsOpenModal }: CreatePostProps) => {
 	const [description, setDescription] = useState<string>('');
@@ -15,7 +17,21 @@ const CreatePost = ({ setIsOpenModal }: CreatePostProps) => {
 	const [error, setError] = useState<string>('');
 	const { user } = useUser();
 	const [preview, setPreview] = useState<string | null>(null);
-	const { addPost } = useUser();
+	const { addPost } = usePosts();
+
+	if (loading) {
+		return (
+			<div className='flex justify-center items-center h-64'>
+				<ClipLoader color='#229ac5' size={50} />
+			</div>
+		);
+	}
+	if (error)
+		return (
+			<p className='font-bold text-2xl text-red-600'>
+				Error: {error}
+			</p>
+		);
 
 	const resetForm = () => {
 		setImage(null);
@@ -56,7 +72,6 @@ const CreatePost = ({ setIsOpenModal }: CreatePostProps) => {
 		};
 		try {
 			const res = await api.post('/posts/create-post', postData);
-			console.log(res.data);
 			addPost(res.data);
 			toast.success('Post successfully created!');
 			resetForm();

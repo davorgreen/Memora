@@ -7,13 +7,30 @@ import CreatePost from '../components/CreatePost/CreatePost';
 import Navbar from '../components/Navbar';
 import { useFriends } from '../hooks/useFriends';
 import { useUser } from '../hooks/useUser';
+import { ClipLoader } from 'react-spinners';
 
 const Home = () => {
 	const navigate = useNavigate();
 	const [isOpen, setIsOpen] = useState<boolean>(false);
 	const [isOpenModal, setIsOpenModal] = useState<boolean>(false);
 	const { user } = useUser();
-	const { myFriends, removeFriend } = useFriends();
+	const { myFriends, removeFriend, loadingFriends, errorFriends } =
+		useFriends();
+
+	if (loadingFriends) {
+		return (
+			<div className='flex justify-center items-center h-64'>
+				<ClipLoader color='#229ac5' size={50} />
+			</div>
+		);
+	}
+
+	if (errorFriends)
+		return (
+			<p className='font-bold text-2xl text-red-600'>
+				Error: {errorFriends}
+			</p>
+		);
 
 	return (
 		<div className='min-h-screen bg-gray-100'>

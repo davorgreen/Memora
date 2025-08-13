@@ -15,28 +15,28 @@ interface FriendsProviderProps {
 }
 
 const FriendsProvider = ({ children }: FriendsProviderProps) => {
-	const [error, setError] = useState('');
-	const [loading, setLoading] = useState(false);
+	const [errorFriends, setErrorFriends] = useState('');
+	const [loadingFriends, setLoadingFriends] = useState(false);
 	const [myFriends, setMyFriends] = useState<User[]>([]);
 	const { user, login } = useUser();
 
 	const fetchFriends = async () => {
 		if (!user?._id) return;
-		setLoading(true);
+		setLoadingFriends(true);
 		try {
 			const { data } = await getFriends(user._id);
 			setMyFriends(data);
 		} catch (err) {
 			if (axios.isAxiosError(err)) {
 				toast.error(err.response?.data?.message || err.message);
-				setError(err.response?.data?.message || err.message);
+				setErrorFriends(err.response?.data?.message || err.message);
 			} else {
 				throw new Error(
 					'Something went wrong while adding a friend.'
 				);
 			}
 		} finally {
-			setLoading(false);
+			setLoadingFriends(false);
 		}
 	};
 
@@ -47,9 +47,9 @@ const FriendsProvider = ({ children }: FriendsProviderProps) => {
 	}, [user?._id]);
 
 	const addFriend = async (friendId: string) => {
+		setLoadingFriends(true);
 		try {
 			const res = await addFriends(friendId);
-			console.log(res.data);
 			toast.success('Friend added!');
 			if (user) {
 				login({
@@ -61,14 +61,17 @@ const FriendsProvider = ({ children }: FriendsProviderProps) => {
 		} catch (err) {
 			if (axios.isAxiosError(err)) {
 				toast.error(err.response?.data?.message || err.message);
-				setError(err.response?.data?.message || err.message);
+				setErrorFriends(err.response?.data?.message || err.message);
 			} else {
 				toast.error('Something went wrong while adding a friend.');
 			}
+		} finally {
+			setLoadingFriends(false);
 		}
 	};
 
 	const removeFriend = async (friendId: string) => {
+		setLoadingFriends(true);
 		try {
 			await removeFriends(friendId);
 			toast.success('Friend removed!');
@@ -84,10 +87,12 @@ const FriendsProvider = ({ children }: FriendsProviderProps) => {
 		} catch (err) {
 			if (axios.isAxiosError(err)) {
 				toast.error(err.response?.data?.message || err.message);
-				setError(err.response?.data?.message || err.message);
+				setErrorFriends(err.response?.data?.message || err.message);
 			} else {
 				toast.error('Failed to remove friend.');
 			}
+		} finally {
+			setLoadingFriends(false);
 		}
 	};
 
@@ -97,6 +102,8 @@ const FriendsProvider = ({ children }: FriendsProviderProps) => {
 				addFriend,
 				removeFriend,
 				myFriends,
+				loadingFriends,
+				errorFriends,
 			}}>
 			{children}
 		</FriendsContext.Provider>

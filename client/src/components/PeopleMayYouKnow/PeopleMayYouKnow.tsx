@@ -3,14 +3,26 @@ import Profile from '../../assets/profilepicture.jpg';
 import axios from 'axios';
 import { usePeopleYouMayKnow } from './usePeopleMayYouKnow';
 import { useFriends } from '../../hooks/useFriends';
+import { ClipLoader } from 'react-spinners';
 
 const PeopleMayYouKnow = () => {
-	const { addFriend } = useFriends();
+	const { addFriend, loadingFriends, errorFriends } = useFriends();
 	const { user } = useUser();
 	const { people, loading, error } = usePeopleYouMayKnow(user);
 
-	if (loading) return <p>Loading...</p>;
-	if (error) return <p>Error: {error}</p>;
+	if (loading || loadingFriends) {
+		return (
+			<div className='flex justify-center items-center h-64'>
+				<ClipLoader color='#229ac5' size={50} />
+			</div>
+		);
+	}
+	if (error || errorFriends)
+		return (
+			<p className='font-bold text-2xl text-red-600'>
+				Error: {error || errorFriends}
+			</p>
+		);
 
 	const handleAddFriend = async (friendId: string) => {
 		try {

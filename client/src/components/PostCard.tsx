@@ -1,10 +1,26 @@
 import { FaRegHeart } from 'react-icons/fa';
 import { FaRegComment } from 'react-icons/fa';
 import Profile from '../assets/profilepicture.jpg';
-import { useUser } from '../hooks/useUser';
+import { usePosts } from '../hooks/UsePosts';
+import { ClipLoader } from 'react-spinners';
 
 const PostCard = () => {
-	const { posts } = useUser();
+	const { posts, loadingPosts, errorPosts } = usePosts();
+
+	if (loadingPosts) {
+		return (
+			<div className='flex justify-center items-center h-64'>
+				<ClipLoader color='#229ac5' size={50} />
+			</div>
+		);
+	}
+
+	if (errorPosts)
+		return (
+			<p className='font-bold text-2xl text-red-600'>
+				Error: {errorPosts}
+			</p>
+		);
 
 	return (
 		<div className='grid grid-cols-1 gap-6'>

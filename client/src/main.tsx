@@ -4,12 +4,15 @@ import './index.css';
 import App from './App.tsx';
 import UserProvider from './context/UserProvider.tsx';
 import FriendsProvider from './context/FriendsProvider.tsx';
+import PostsProvider from './context/PostsProvider.tsx';
 
 createRoot(document.getElementById('root')!).render(
 	<StrictMode>
 		<UserProvider>
 			<FriendsProvider>
-				<App />
+				<PostsProvider>
+					<App />
+				</PostsProvider>
 			</FriendsProvider>
 		</UserProvider>
 	</StrictMode>
