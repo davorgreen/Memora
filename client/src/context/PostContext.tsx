@@ -6,6 +6,7 @@ export interface PostsContextType {
 	addPost: (newPost: Post) => void;
 	loadingPosts: boolean;
 	errorPosts: string | null;
+	deletePostById: (id: string) => void;
 }
 
 export const PostsContext = createContext<

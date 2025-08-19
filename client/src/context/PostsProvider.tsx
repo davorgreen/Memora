@@ -10,7 +10,7 @@ interface UserProviderProps {
 }
 
 const PostsProvider = ({ children }: UserProviderProps) => {
-	const [posts, setPosts] = useState<Post[] | null>([]);
+	const [posts, setPosts] = useState<Post[] | null>(null);
 	const [errorPosts, setErrorPosts] = useState('');
 	const [loadingPosts, setLoadingPosts] = useState(false);
 	const { user } = useUser();
@@ -23,8 +23,8 @@ const PostsProvider = ({ children }: UserProviderProps) => {
 			setPosts(data ?? []);
 		} catch (err) {
 			if (axios.isAxiosError(err)) {
-				toast.error(err.response?.data?.message || err.message);
 				setErrorPosts(err.response?.data?.message || err.message);
+				toast.error(err.response?.data?.message || err.message);
 			}
 		} finally {
 			setLoadingPosts(false);
@@ -35,10 +35,20 @@ const PostsProvider = ({ children }: UserProviderProps) => {
 		setPosts((prev) => [
 			{
 				...newPost,
-				userId: { username: user?.username || 'Unknown' },
+				userId: {
+					_id: user?._id || 'unknown_id',
+					username: user?.username || 'Unknown',
+				},
 			},
 			...(prev || []),
 		]);
+	};
+
+	const deletePostById = (id: string) => {
+		console.log(id);
+		setPosts((prev) =>
+			prev ? prev.filter((post) => post._id !== id) : []
+		);
 	};
 
 	useEffect(() => {
@@ -54,6 +64,7 @@ const PostsProvider = ({ children }: UserProviderProps) => {
 				addPost,
 				loadingPosts,
 				errorPosts,
+				deletePostById,
 			}}>
 			{children}
 		</PostsContext.Provider>

@@ -59,9 +59,10 @@ export const deletePost = async (req, res, next) => {
     try {
         const post = await Post.findById(req.params.id);
         if (!post) return res.status(404).json("Post not found");
-        if (post?.userId !== req.body.userId) {
+        if (post.userId.toString() !== req.user.id) {
             return res.status(403).json({ message: "You can delete only your own posts!" });
         }
+
         if (post.image?.public_id) {
             await cloudinary.uploader.destroy(post.image.public_id);
         }
@@ -86,7 +87,9 @@ export const getPosts = async (req, res, next) => {
             .sort({ createdAt: -1 })
             .populate("userId", "username");
 
-        const uniquePosts = posts.filter(
+        const validPosts = posts.filter(post => post.userId != null);
+
+        const uniquePosts = validPosts.filter(
             (post, index, self) =>
                 index === self.findIndex((p) => p._id.toString() === post._id.toString())
         );
