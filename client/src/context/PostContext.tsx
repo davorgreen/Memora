@@ -7,6 +7,7 @@ export interface PostsContextType {
 	loadingPosts: boolean;
 	errorPosts: string | null;
 	deletePostById: (id: string) => void;
+	setPosts: React.Dispatch<React.SetStateAction<Post[] | null>>;
 }
 
 export const PostsContext = createContext<

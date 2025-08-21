@@ -1,6 +1,6 @@
+// useAxiosInterceptors.js
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { useUser } from './useUser';
 import api from '../services/axios';
 
@@ -13,6 +13,11 @@ const useAxiosInterceptors = () => {
 			(response) => response,
 			async (error) => {
 				const originalRequest = error.config;
+				if (originalRequest.url.includes('/auth/refresh-token')) {
+					logout();
+					navigate('/login');
+					return Promise.reject(error);
+				}
 				if (
 					error.response &&
 					(error.response.status === 401 ||
@@ -21,7 +26,11 @@ const useAxiosInterceptors = () => {
 				) {
 					originalRequest._retry = true;
 					try {
-						await api.post('/auth/refresh-token');
+						await api.post(
+							'/auth/refresh-token',
+							{},
+							{ withCredentials: true }
+						);
 						return api(originalRequest);
 					} catch (refreshError) {
 						logout();
@@ -34,7 +43,7 @@ const useAxiosInterceptors = () => {
 		);
 
 		return () => {
-			axios.interceptors.response.eject(responseInterceptor);
+			api.interceptors.response.eject(responseInterceptor);
 		};
 	}, [navigate, logout]);
 };

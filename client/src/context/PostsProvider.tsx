@@ -65,6 +65,7 @@ const PostsProvider = ({ children }: UserProviderProps) => {
 				loadingPosts,
 				errorPosts,
 				deletePostById,
+				setPosts,
 			}}>
 			{children}
 		</PostsContext.Provider>

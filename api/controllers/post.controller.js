@@ -31,22 +31,10 @@ export const updatePost = async (req, res, next) => {
     try {
         const post = await Post.findById(req.params.id);
         if (!post) return res.status(404).json("Post not found");
-        if (post.userId !== req.body.userId) {
-            return res.status(403).json({ message: "You can update only your own posts!" })
-        }
-        if (req.body.image && post.image?.public_id) {
-            await cloudinary.uploader.destroy(post.image.public_id);
-        }
-        let updatedImage = post.image;
-        if (req.body.image) {
-            const result = await uploadBase64Image(req.body.image, "posts");
-            updatedImage = {
-                url: result.secure_url,
-                public_id: result.public_id
-            }
+        if (post.userId.toString() !== req.body.userId) {
+            return res.status(403).json({ message: "You can update only your own posts!" });
         }
         post.description = req.body.description || post.description;
-        post.image = updatedImage;
         const updatedPost = await post.save();
         res.status(200).json(updatedPost);
     } catch (error) {

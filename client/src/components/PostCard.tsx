@@ -5,24 +5,39 @@ import { ClipLoader } from 'react-spinners';
 import { IoMdMore } from 'react-icons/io';
 import { RxCross2 } from 'react-icons/rx';
 import { CiEdit } from 'react-icons/ci';
+import { IoSaveOutline } from 'react-icons/io5';
 import { useState } from 'react';
 import api from '../services/axios';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import type { Post } from '../types/Post';
+import { useUser } from '../hooks/useUser';
 
 const PostCard = () => {
-	const { posts, loadingPosts, errorPosts, deletePostById } =
-		usePosts();
+	const {
+		posts,
+		loadingPosts,
+		errorPosts,
+		deletePostById,
+		setPosts,
+	} = usePosts();
+	const { user } = useUser();
 	const [isOpenModal, setIsOpenModal] = useState<string | null>(null);
 	const [loadingDeletePost, setLoadingDeletePost] = useState(false);
 	const [errorDeletePost, setErrorDeletePost] = useState<
 		string | null
 	>(null);
-
+	const [description, setDescription] = useState<string>('');
+	const [editingPost, setEditingPost] = useState<string | null>(null);
+	const [loadingEditPost, setLoadingEditPost] =
+		useState<boolean>(false);
+	const [errorEditPost, setErrorEditPost] = useState<string | null>(
+		null
+	);
 	const modalContent =
-		'flex items-center gap-2 px-4 py-2 text-gray-700 font-semibold hover:bg-blue-200 cursor-pointer transition';
+		'flex items-center w-full h-full gap-2 px-4 py-2 text-gray-700 font-semibold hover:bg-blue-200 cursor-pointer transition';
 
-	if (loadingPosts || loadingDeletePost) {
+	if (loadingPosts || loadingDeletePost || loadingEditPost) {
 		return (
 			<div className='flex justify-center items-center h-64'>
 				<ClipLoader color='#229ac5' size={50} />
@@ -30,13 +45,45 @@ const PostCard = () => {
 		);
 	}
 
-	if (errorPosts || errorDeletePost) {
+	if (errorPosts || errorDeletePost || errorEditPost) {
 		return (
 			<p className='font-bold text-2xl text-red-600'>
 				Error: {errorPosts || errorDeletePost}
 			</p>
 		);
 	}
+
+	const handleEditPost = (post: Post) => {
+		setIsOpenModal(null);
+		setEditingPost(post._id);
+		setDescription(post.description || '');
+	};
+
+	const handleSave = async (postId: string) => {
+		setLoadingEditPost(true);
+		try {
+			await api.put(`/posts/${postId}`, {
+				userId: user?._id,
+				description,
+			});
+			setPosts(
+				posts?.map((p) =>
+					p._id === postId ? { ...p, description } : p
+				) ?? []
+			);
+			toast.success('Post successfully edited');
+			setEditingPost(null);
+		} catch (err) {
+			if (axios.isAxiosError(err)) {
+				const message = err.response?.data?.message || err.message;
+				setErrorEditPost(message);
+				toast.error(message);
+				console.log(err);
+			}
+		} finally {
+			setLoadingEditPost(false);
+		}
+	};
 
 	const handleDeletePost = async (id: string) => {
 		setLoadingDeletePost(true);
@@ -96,20 +143,49 @@ const PostCard = () => {
 										<IoMdMore size={30} />
 									</div>
 									{isOpenModal === post._id && (
-										<div className='absolute text-center right-0 mt-1 w-32 bg-white z-50'>
+										<div className='absolute text-center right-0 mt-1 w-40 h-full bg-white z-50'>
 											<button
 												onClick={() => handleDeletePost(post._id)}
 												className={modalContent}>
 												<RxCross2 color='red' size={25} /> Delete
 											</button>
-											<button className={modalContent}>
+											<button
+												className={modalContent}
+												onClick={() => handleEditPost(post)}>
 												<CiEdit size={25} /> Edit
 											</button>
 										</div>
 									)}
 								</div>
 							</div>
-							<div className='text-gray-800'>{post.description}</div>
+							{editingPost === post._id ? (
+								<>
+									<textarea
+										value={description}
+										onChange={(e) => setDescription(e.target.value)}
+										className='border p-2 rounded w-full'
+									/>
+									<div className='flex'>
+										{' '}
+										<button
+											className='flex items-center gap-2 px-4 py-2 text-gray-700 font-semibold hover:bg-blue-200 cursor-pointer transition'
+											onClick={() => handleSave(post._id)}>
+											<IoSaveOutline size={25} />
+											Save
+										</button>
+										<button
+											className='flex items-center'
+											onClick={() => setEditingPost(null)}>
+											<RxCross2 size={25} color='red' />
+											Cancel
+										</button>
+									</div>
+								</>
+							) : (
+								<div className='text-gray-800'>
+									{post.description}
+								</div>
+							)}
 							<div className='flex gap-6 items-center'>
 								<button className='flex items-center gap-1 text-gray-600 hover:text-red-500 transition'>
 									<FaRegHeart size={24} />
