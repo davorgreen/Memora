@@ -3,11 +3,13 @@ import type { Post } from '../types/Post';
 
 export interface PostsContextType {
 	posts: Post[] | null;
+	myPosts: Post[] | null;
 	addPost: (newPost: Post) => void;
 	loadingPosts: boolean;
 	errorPosts: string | null;
 	deletePostById: (id: string) => void;
 	setPosts: React.Dispatch<React.SetStateAction<Post[] | null>>;
+	setMyPosts: React.Dispatch<React.SetStateAction<Post[] | null>>;
 }
 
 export const PostsContext = createContext<

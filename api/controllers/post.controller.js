@@ -87,3 +87,21 @@ export const getPosts = async (req, res, next) => {
         next(error)
     }
 }
+
+//get UserPost 
+export const getMyPosts = async (req, res, next) => {
+    try {
+        const userId = req.params.userId;
+
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: "User not found!" });
+
+        const posts = await Post.find({ userId })
+            .sort({ createdAt: -1 })
+            .populate("userId", "username");
+
+        return res.status(200).json(posts);
+    } catch (error) {
+        next(error)
+    }
+}

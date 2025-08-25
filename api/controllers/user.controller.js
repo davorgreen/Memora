@@ -66,3 +66,13 @@ export const getAllFriends = async (req, res, next) => {
     }
 };
 
+//get followers
+export const getFollowers = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const followers = await User.find({ friends: userId });
+        res.status(200).json(followers);
+    } catch (err) {
+        next(err);
+    }
+};

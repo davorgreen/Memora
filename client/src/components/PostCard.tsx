@@ -20,6 +20,8 @@ const PostCard = () => {
 		errorPosts,
 		deletePostById,
 		setPosts,
+		setMyPosts,
+		myPosts,
 	} = usePosts();
 	const { user } = useUser();
 	const [isOpenModal, setIsOpenModal] = useState<string | null>(null);
@@ -71,6 +73,11 @@ const PostCard = () => {
 					p._id === postId ? { ...p, description } : p
 				) ?? []
 			);
+			setMyPosts(
+				myPosts?.map((p) =>
+					p._id === postId ? { ...p, description } : p
+				) ?? []
+			);
 			toast.success('Post successfully edited');
 			setEditingPost(null);
 		} catch (err) {
@@ -78,7 +85,6 @@ const PostCard = () => {
 				const message = err.response?.data?.message || err.message;
 				setErrorEditPost(message);
 				toast.error(message);
-				console.log(err);
 			}
 		} finally {
 			setLoadingEditPost(false);

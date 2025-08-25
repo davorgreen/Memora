@@ -11,3 +11,7 @@ export const addFriends = (friendId: string) => {
 export const removeFriends = (friendId: string) => {
 	return api.post(`/users/remove-friend`, { friendId });
 };
+
+export const getFollower = () => {
+	return api.get(`/users/followers`);
+};

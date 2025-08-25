@@ -11,6 +11,7 @@ interface UserProviderProps {
 
 const PostsProvider = ({ children }: UserProviderProps) => {
 	const [posts, setPosts] = useState<Post[] | null>(null);
+	const [myPosts, setMyPosts] = useState<Post[] | null>(null);
 	const [errorPosts, setErrorPosts] = useState('');
 	const [loadingPosts, setLoadingPosts] = useState(false);
 	const { user } = useUser();
@@ -21,6 +22,22 @@ const PostsProvider = ({ children }: UserProviderProps) => {
 		try {
 			const { data } = await api.get(`/posts/feed/${user._id}`);
 			setPosts(data ?? []);
+		} catch (err) {
+			if (axios.isAxiosError(err)) {
+				setErrorPosts(err.response?.data?.message || err.message);
+				toast.error(err.response?.data?.message || err.message);
+			}
+		} finally {
+			setLoadingPosts(false);
+		}
+	};
+
+	const getMyPosts = async () => {
+		if (!user?._id) return;
+		setLoadingPosts(true);
+		try {
+			const { data } = await api.get(`/posts/user/${user._id}`);
+			setMyPosts(data ?? []);
 		} catch (err) {
 			if (axios.isAxiosError(err)) {
 				setErrorPosts(err.response?.data?.message || err.message);
@@ -42,11 +59,23 @@ const PostsProvider = ({ children }: UserProviderProps) => {
 			},
 			...(prev || []),
 		]);
+		setMyPosts((prev) => [
+			{
+				...newPost,
+				userId: {
+					_id: user?._id || 'unknown_id',
+					username: user?.username || 'Unknown',
+				},
+			},
+			...(prev || []),
+		]);
 	};
 
 	const deletePostById = (id: string) => {
-		console.log(id);
 		setPosts((prev) =>
+			prev ? prev.filter((post) => post._id !== id) : []
+		);
+		setMyPosts((prev) =>
 			prev ? prev.filter((post) => post._id !== id) : []
 		);
 	};
@@ -54,6 +83,7 @@ const PostsProvider = ({ children }: UserProviderProps) => {
 	useEffect(() => {
 		if (user) {
 			getPosts();
+			getMyPosts();
 		}
 	}, [user?._id]);
 
@@ -66,6 +96,8 @@ const PostsProvider = ({ children }: UserProviderProps) => {
 				errorPosts,
 				deletePostById,
 				setPosts,
+				myPosts,
+				setMyPosts,
 			}}>
 			{children}
 		</PostsContext.Provider>

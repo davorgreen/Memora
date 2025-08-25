@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import type { User } from '../types/User';
 import {
 	addFriends,
+	getFollower,
 	getFriends,
 	removeFriends,
 } from '../services/friendsService';
@@ -18,6 +19,10 @@ const FriendsProvider = ({ children }: FriendsProviderProps) => {
 	const [errorFriends, setErrorFriends] = useState('');
 	const [loadingFriends, setLoadingFriends] = useState(false);
 	const [myFriends, setMyFriends] = useState<User[]>([]);
+	const [followers, setFollowers] = useState<User[]>([]);
+	const [loadindgFollowers, setLoadingFollowers] =
+		useState<boolean>(false);
+	const [errorFollowers, setErrorFollowers] = useState('');
 	const { user, login } = useUser();
 
 	const fetchFriends = async () => {
@@ -40,9 +45,25 @@ const FriendsProvider = ({ children }: FriendsProviderProps) => {
 		}
 	};
 
+	const getFoll = async () => {
+		setLoadingFollowers(true);
+		try {
+			const { data } = await getFollower();
+			setFollowers(data ?? []);
+		} catch (err) {
+			if (axios.isAxiosError(err)) {
+				toast.error(err.response?.data?.message || err.message);
+				setErrorFollowers(err.response?.data?.message || err.message);
+			}
+		} finally {
+			setLoadingFollowers(false);
+		}
+	};
+
 	useEffect(() => {
 		if (user) {
 			fetchFriends();
+			getFoll();
 		}
 	}, [user?._id]);
 
@@ -104,6 +125,7 @@ const FriendsProvider = ({ children }: FriendsProviderProps) => {
 				myFriends,
 				loadingFriends,
 				errorFriends,
+				followers,
 			}}>
 			{children}
 		</FriendsContext.Provider>
