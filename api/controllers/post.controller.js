@@ -105,3 +105,38 @@ export const getMyPosts = async (req, res, next) => {
         next(error)
     }
 }
+
+//like post
+export const handleLikePost = async (req, res, next) => {
+    try {
+        const { postId } = req.params;
+        const userId = req.user.id;
+
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({ message: "Post not found" });
+        }
+
+        if (post.likes.includes(userId)) {
+            await Post.findByIdAndUpdate(
+                postId,
+                { $pull: { likes: userId } },
+                { new: true }
+            )
+            return res.status(200).json({ message: "Like removed" });
+        }
+
+        await Post.findByIdAndUpdate(
+            postId,
+            { $addToSet: { likes: userId } },
+            { new: true }
+        )
+        return res.status(200).json({
+            message: "Like added",
+            likesCount: updatedPost.likes.length,
+            likes: updatedPost.likes,
+        });
+    } catch (error) {
+        next(error);
+    }
+}
