@@ -126,7 +126,7 @@ export const handleLikePost = async (req, res, next) => {
             return res.status(200).json({ message: "Like removed" });
         }
 
-        await Post.findByIdAndUpdate(
+        const updatedPost = await Post.findByIdAndUpdate(
             postId,
             { $addToSet: { likes: userId } },
             { new: true }
@@ -135,6 +135,71 @@ export const handleLikePost = async (req, res, next) => {
             message: "Like added",
             likesCount: updatedPost.likes.length,
             likes: updatedPost.likes,
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+//add comment
+export const addComment = async (res, req, next) => {
+    try {
+        const { postId } = req.params;
+        const { comment } = req.body;
+        const userId = req.user.id;
+
+        if (!comment || comment.trim() === '') {
+            return res.status(400).json({ message: "Comment cannot be empty!" });
+        }
+
+        const post = await Post.findByIdAndUpdate(
+            postId,
+            {
+                $push: {
+                    comments: {
+                        userId, comment, createdAt: new Date(),
+                    }
+                }
+            },
+            { new: true }
+        )
+        res.status(201).json({
+            message: "Comment added",
+            comments: post.comments
+        })
+        if (!post) {
+            return res.status(400).json({ message: "Post not found" });
+        }
+    } catch (error) {
+        next(error);
+    }
+}
+
+//delete comment
+export const deleteComment = async (req, res, next) => {
+    try {
+        const { postId, commentId } = req.params;
+        const userId = req.user.id;
+
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({ message: "Post not found" });
+        }
+
+        const comment = post.comments.id(commentId);
+        if (!comment) {
+            return res.status(404).json({ message: "Comment not found" });
+        }
+
+        if (comment.userId !== userId) {
+            return res.status(403).json({ message: "Not authorized" })
+        }
+
+        comment.remove();
+        await post.save();
+        res.status(200).json({
+            message: "Comment deleted",
+            comments: post.comments,
         });
     } catch (error) {
         next(error);

@@ -1,6 +1,6 @@
 import express from "express"
 import { verifyToken } from "../utils/verifyToken.js";
-import { createPost, deletePost, getMyPosts, getPosts, handleLikePost, updatePost } from "../controllers/post.controller.js";
+import { addComment, createPost, deleteComment, deletePost, getMyPosts, getPosts, handleLikePost, updatePost } from "../controllers/post.controller.js";
 
 const router = express.Router();
 
@@ -14,6 +14,10 @@ router.put("/:id", verifyToken, updatePost);
 // DELETE
 router.delete("/:id", verifyToken, deletePost);
 //LIKE
-router.post("/:postId/like", verifyToken, handleLikePost)
+router.post("/:postId/like", verifyToken, handleLikePost);
+//COMMENT
+router.post("/:postId/comments", verifyToken, addComment);
+//DELETE COMMENT
+router.delete("/:postId/comments/:commentId", verifyToken, deleteComment);
 
 export default router;

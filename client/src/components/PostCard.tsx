@@ -6,6 +6,7 @@ import { IoMdMore } from 'react-icons/io';
 import { RxCross2 } from 'react-icons/rx';
 import { CiEdit } from 'react-icons/ci';
 import { IoSaveOutline } from 'react-icons/io5';
+import { FaHeart } from 'react-icons/fa';
 import { useState } from 'react';
 import api from '../services/axios';
 import axios from 'axios';
@@ -108,6 +109,23 @@ const PostCard = () => {
 		}
 	};
 
+	const handleAddLike = async (postId: string) => {
+		try {
+			const res = await api.post(`/posts/${postId}/like`);
+
+			const updatedLikes = res.data.likes;
+			setPosts((prevPosts) =>
+				prevPosts
+					? prevPosts.map((p) =>
+							p._id === postId ? { ...p, likes: updatedLikes } : p
+					  )
+					: []
+			);
+		} catch (err) {
+			console.error('Error while liking post:', err);
+		}
+	};
+
 	if (!posts || posts.length === 0) {
 		return (
 			<p className='text-3xl text-red-600 font-semibold'>
@@ -120,91 +138,100 @@ const PostCard = () => {
 		<div className='grid grid-cols-1 gap-6'>
 			{posts
 				.filter((post) => post.userId)
-				.map((post) => (
-					<div
-						key={post._id}
-						className='w-full h-full rounded-xl shadow-md overflow-hidden border-4 border-blue-200 bg-blue-100'>
-						<img
-							src={post.image?.url || Profile}
-							alt='post'
-							className='w-full h-auto'
-						/>
-						<div className='p-4 flex flex-col gap-4 items-start justify-between'>
-							<div className='flex justify-between w-full'>
-								<div className='text-gray-800 font-semibold text-lg cursor-pointer hover:text-blue-500 transition'>
-									{post.userId ? (
-										<div>{post.userId?.username}</div>
-									) : (
-										<div>Unknown</div>
-									)}
-								</div>
-								<div className='relative'>
-									<div
-										onClick={() =>
-											setIsOpenModal(
-												isOpenModal === post._id ? null : post._id
-											)
-										}
-										className='p-1 hover:bg-gray-100 rounded-full bg-gray-200 cursor-pointer transition'>
-										<IoMdMore size={30} />
+				.map((post) => {
+					const userId = user?._id ?? '';
+					const isLiked = (post.likes || []).includes(userId);
+
+					return (
+						<div
+							key={post._id}
+							className='w-full h-full rounded-xl shadow-md overflow-hidden border-4 border-blue-200 bg-blue-100'>
+							<img
+								src={post.image?.url || Profile}
+								alt='post'
+								className='w-full h-auto'
+							/>
+							<div className='p-4 flex flex-col gap-4 items-start justify-between'>
+								<div className='flex justify-between w-full'>
+									<div className='text-gray-800 font-semibold text-lg cursor-pointer hover:text-blue-500 transition'>
+										{post.userId ? post.userId.username : 'Unknown'}
 									</div>
-									{isOpenModal === post._id && (
-										<div className='absolute text-center right-0 mt-1 w-40 h-full bg-white z-50'>
+									<div className='relative'>
+										<div
+											onClick={() =>
+												setIsOpenModal(
+													isOpenModal === post._id ? null : post._id
+												)
+											}
+											className='p-1 hover:bg-gray-100 rounded-full bg-gray-200 cursor-pointer transition'>
+											<IoMdMore size={30} />
+										</div>
+										{isOpenModal === post._id && (
+											<div className='absolute text-center right-0 mt-1 w-40 h-full bg-white z-50'>
+												<button
+													onClick={() => handleDeletePost(post._id)}
+													className={modalContent}>
+													<RxCross2 color='red' size={25} /> Delete
+												</button>
+												<button
+													className={modalContent}
+													onClick={() => handleEditPost(post)}>
+													<CiEdit size={25} /> Edit
+												</button>
+											</div>
+										)}
+									</div>
+								</div>
+
+								{editingPost === post._id ? (
+									<>
+										<textarea
+											value={description}
+											onChange={(e) => setDescription(e.target.value)}
+											className='border p-2 rounded w-full'
+										/>
+										<div className='flex gap-2'>
 											<button
-												onClick={() => handleDeletePost(post._id)}
-												className={modalContent}>
-												<RxCross2 color='red' size={25} /> Delete
+												className='flex items-center gap-2 px-4 py-2 text-gray-700 font-semibold hover:bg-blue-200 cursor-pointer transition'
+												onClick={() => handleSave(post._id)}>
+												<IoSaveOutline size={25} />
+												Save
 											</button>
 											<button
-												className={modalContent}
-												onClick={() => handleEditPost(post)}>
-												<CiEdit size={25} /> Edit
+												className='flex items-center gap-2'
+												onClick={() => setEditingPost(null)}>
+												<RxCross2 size={25} color='red' />
+												Cancel
 											</button>
 										</div>
-									)}
-								</div>
-							</div>
-							{editingPost === post._id ? (
-								<>
-									<textarea
-										value={description}
-										onChange={(e) => setDescription(e.target.value)}
-										className='border p-2 rounded w-full'
-									/>
-									<div className='flex'>
-										{' '}
-										<button
-											className='flex items-center gap-2 px-4 py-2 text-gray-700 font-semibold hover:bg-blue-200 cursor-pointer transition'
-											onClick={() => handleSave(post._id)}>
-											<IoSaveOutline size={25} />
-											Save
-										</button>
-										<button
-											className='flex items-center'
-											onClick={() => setEditingPost(null)}>
-											<RxCross2 size={25} color='red' />
-											Cancel
-										</button>
+									</>
+								) : (
+									<div className='text-gray-800'>
+										{post.description}
 									</div>
-								</>
-							) : (
-								<div className='text-gray-800'>
-									{post.description}
+								)}
+
+								<div className='flex gap-6 items-center'>
+									<button
+										onClick={() => handleAddLike(post._id)}
+										className='flex items-center gap-1 text-gray-600 hover:text-red-500 transition'>
+										{isLiked ? (
+											<FaHeart size={24} className='text-red-500' />
+										) : (
+											<FaRegHeart size={24} />
+										)}
+										<span>{post.likes?.length || 0}</span>
+									</button>
+
+									<button className='flex items-center gap-1 text-gray-600 hover:text-blue-500 transition'>
+										<FaRegComment size={24} />
+										<span>{post.comments?.length || 0}</span>
+									</button>
 								</div>
-							)}
-							<div className='flex gap-6 items-center'>
-								<button className='flex items-center gap-1 text-gray-600 hover:text-red-500 transition'>
-									<FaRegHeart size={24} />
-									<span>{post.likes?.length || 0}</span>
-								</button>
-								<button className='flex items-center gap-1 text-gray-600 hover:text-blue-500 transition'>
-									<FaRegComment size={24} />
-									<span>{post.comments?.length || 0}</span>
-								</button>
 							</div>
 						</div>
-					</div>
-				))}
+					);
+				})}
 		</div>
 	);
 };
