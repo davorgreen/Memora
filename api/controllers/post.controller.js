@@ -142,7 +142,7 @@ export const handleLikePost = async (req, res, next) => {
 }
 
 //add comment
-export const addComment = async (res, req, next) => {
+export const addComment = async (req, res, next) => {
     try {
         const { postId } = req.params;
         const { comment } = req.body;
@@ -162,7 +162,7 @@ export const addComment = async (res, req, next) => {
                 }
             },
             { new: true }
-        )
+        ).populate("comments.userId", "username")
         res.status(201).json({
             message: "Comment added",
             comments: post.comments
@@ -191,11 +191,10 @@ export const deleteComment = async (req, res, next) => {
             return res.status(404).json({ message: "Comment not found" });
         }
 
-        if (comment.userId !== userId) {
+        if (comment.userId.toString() !== userId) {
             return res.status(403).json({ message: "Not authorized" })
         }
-
-        comment.remove();
+        comment.deleteOne();
         await post.save();
         res.status(200).json({
             message: "Comment deleted",

@@ -11,8 +11,9 @@ import { useState } from 'react';
 import api from '../services/axios';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import type { Post } from '../types/Post';
+import type { Comment, Post } from '../types/Post';
 import { useUser } from '../hooks/useUser';
+import avatar from '../assets/profilepicture.jpg';
 
 const PostCard = () => {
 	const {
@@ -37,6 +38,10 @@ const PostCard = () => {
 	const [errorEditPost, setErrorEditPost] = useState<string | null>(
 		null
 	);
+	const [isOpenComment, setIsOpenComment] = useState<string | null>(
+		null
+	);
+	const [newComment, setNewComment] = useState<string>('');
 	const modalContent =
 		'flex items-center w-full h-full gap-2 px-4 py-2 text-gray-700 font-semibold hover:bg-blue-200 cursor-pointer transition';
 
@@ -62,6 +67,7 @@ const PostCard = () => {
 		setDescription(post.description || '');
 	};
 
+	//save desc
 	const handleSave = async (postId: string) => {
 		setLoadingEditPost(true);
 		try {
@@ -92,6 +98,7 @@ const PostCard = () => {
 		}
 	};
 
+	//delete post
 	const handleDeletePost = async (id: string) => {
 		setLoadingDeletePost(true);
 		try {
@@ -122,7 +129,83 @@ const PostCard = () => {
 					: []
 			);
 		} catch (err) {
-			console.error('Error while liking post:', err);
+			if (axios.isAxiosError(err)) {
+				const message = err.response?.data?.message || err.message;
+				toast.error(message);
+			}
+		}
+	};
+
+	//add comment
+	const handleAddComment = async (
+		postId: string,
+		comment: string
+	) => {
+		try {
+			const res = await api.post(`/posts/${postId}/comments`, {
+				comment,
+			});
+			const updatedComments = res.data.comments;
+			setPosts((prevPost) =>
+				prevPost
+					? prevPost.map((p) =>
+							p._id === postId
+								? { ...p, comments: updatedComments }
+								: p
+					  )
+					: []
+			);
+			setMyPosts((prevPost) =>
+				prevPost
+					? prevPost.map((p) =>
+							p._id === postId
+								? { ...p, comments: updatedComments }
+								: p
+					  )
+					: []
+			);
+			setNewComment('');
+		} catch (err) {
+			if (axios.isAxiosError(err)) {
+				const message = err.response?.data?.message || err.message;
+				toast.error(message);
+			}
+		}
+	};
+
+	//delete comment
+	const handleDeleteComment = async (
+		postId: string,
+		commentId: string
+	) => {
+		try {
+			const res = await api.delete(
+				`/posts/${postId}/comments/${commentId}`
+			);
+			const updatedComments = res.data.comments;
+			setPosts((prevPost) =>
+				prevPost
+					? prevPost.map((p) =>
+							p._id === postId
+								? { ...p, comments: updatedComments }
+								: p
+					  )
+					: []
+			);
+			setMyPosts((prevPost) =>
+				prevPost
+					? prevPost.map((p) =>
+							p._id === postId
+								? { ...p, comments: updatedComments }
+								: p
+					  )
+					: []
+			);
+		} catch (err) {
+			if (axios.isAxiosError(err)) {
+				const message = err.response?.data?.message || err.message;
+				toast.error(message);
+			}
 		}
 	};
 
@@ -210,8 +293,7 @@ const PostCard = () => {
 										{post.description}
 									</div>
 								)}
-
-								<div className='flex gap-6 items-center'>
+								<div className='flex  gap-6 items-center'>
 									<button
 										onClick={() => handleAddLike(post._id)}
 										className='flex items-center gap-1 text-gray-600 hover:text-red-500 transition'>
@@ -222,12 +304,72 @@ const PostCard = () => {
 										)}
 										<span>{post.likes?.length || 0}</span>
 									</button>
-
-									<button className='flex items-center gap-1 text-gray-600 hover:text-blue-500 transition'>
+									{/* Comment */}
+									<button
+										onClick={() =>
+											setIsOpenComment(
+												isOpenComment === post._id ? null : post._id
+											)
+										}
+										className='flex items-center gap-1 text-gray-600 hover:text-blue-500 transition'>
 										<FaRegComment size={24} />
 										<span>{post.comments?.length || 0}</span>
 									</button>
 								</div>
+								{isOpenComment === post._id && (
+									<div className='mt-3 flex flex-col gap-4'>
+										<div className='flex gap-2 mb-2'>
+											<input
+												type='text'
+												value={newComment}
+												onChange={(e) =>
+													setNewComment(e.target.value)
+												}
+												placeholder='Write a comment...'
+												className='flex-1 border px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400'
+											/>
+											<button
+												onClick={() =>
+													handleAddComment(post._id, newComment)
+												}
+												className='bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition'>
+												Add
+											</button>
+										</div>
+										{/* List of comment */}
+										{post.comments?.map((c: Comment) => (
+											<div
+												key={c._id}
+												className='flex justify-between items-center bg-gray-100 border border-blue-400 px-3 py-2 rounded-lg'>
+												<div className='flex flex-col items-center gap-2'>
+													<img
+														src={c.userId.avatar || avatar}
+														alt='aaaa'
+														className='w-10 h-10 rounded-full object-cover'
+													/>
+													<span className='font-semibold'>
+														{c.userId.username}
+													</span>
+												</div>
+												<div className=''>
+													<p className='text-gray-800 text-xl'>
+														{c.comment}
+													</p>
+													<span className='text-xs text-gray-500'>
+														{new Date(c.createdAt).toLocaleString()}
+													</span>
+												</div>
+												<button
+													onClick={() =>
+														handleDeleteComment(post._id, c._id)
+													}
+													className='text-red-500 hover:text-red-700'>
+													<RxCross2 size={25} />
+												</button>
+											</div>
+										))}
+									</div>
+								)}
 							</div>
 						</div>
 					);

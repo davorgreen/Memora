@@ -19,7 +19,20 @@ export interface Post {
 		public_id: string;
 	};
 	likes: string[];
-	comments: string[];
+	comments: Comment[];
 	createdAt: string;
 	updatedAt: string;
 }
+
+export type UserComment = {
+	_id: string;
+	username: string;
+	avatar?: string;
+};
+
+export type Comment = {
+	_id: string;
+	userId: UserComment;
+	comment: string;
+	createdAt: string;
+};
