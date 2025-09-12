@@ -1,7 +1,7 @@
 import Post from "../models/Post.js"
 import User from "../models/User.js"
 import cloudinary, { uploadBase64Image } from "../utils/cloudinary.js";
-
+import { getSocket, users } from "../socket.js";
 
 //create post
 export const createPost = async (req, res, next) => {
@@ -109,6 +109,7 @@ export const getMyPosts = async (req, res, next) => {
 //like post
 export const handleLikePost = async (req, res, next) => {
     try {
+        const io = getSocket();
         const { postId } = req.params;
         const userId = req.user.id;
 
@@ -131,6 +132,20 @@ export const handleLikePost = async (req, res, next) => {
             { $addToSet: { likes: userId } },
             { new: true }
         )
+
+        const likingUser = await User.findById(userId);
+        const username = likingUser.username;
+
+        const toUserId = post.userId.toString();
+        const receiverSocket = users.get(toUserId);
+        if (receiverSocket) {
+            io.to(receiverSocket).emit("like-notification", {
+                message: `User ${username} liked your post!`,
+                fromUserId: userId,
+                postId: post._id,
+            });
+        }
+
         return res.status(200).json({
             message: "Like added",
             likesCount: updatedPost.likes.length,

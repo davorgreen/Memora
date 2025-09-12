@@ -6,9 +6,53 @@ import usersRoute from './routes/users.js'
 import postsRoute from "./routes/post.js"
 import cookieParser from 'cookie-parser'
 import cors from "cors";
+import http from "http"
+import { Server } from "socket.io"
+import { initSocket, users } from './socket.js';
 
 const app = express();
 dotenv.config();
+const server = http.createServer(app);
+const io = initSocket(server);
+
+io.on("connection", (socket) => {
+    console.log("User connected:", socket.id);
+
+    socket.on("register", (userId) => {
+        users.set(userId, socket.id);
+        console.log(`User ${userId} registered on socket ${socket.id}`);
+    });
+
+    socket.on("send-like", ({ fromUserId, toUserId }) => {
+        const receiverSocket = users.get(toUserId);
+        if (receiverSocket) {
+            io.to(receiverSocket).emit("like-notification", {
+                message: `User ${fromUserId} liked your post!`,
+                fromUserId,
+            });
+        }
+    });
+
+    socket.on("send-message", ({ fromUserId, toUserId, text }) => {
+        const receiverSocket = users.get(toUserId);
+        if (receiverSocket) {
+            io.to(receiverSocket).emit("receive-message", {
+                fromUserId,
+                text,
+            });
+        }
+    });
+
+    socket.on("disconnect", () => {
+        console.log("User disconnected:", socket.id);
+        for (let [userId, sockId] of users.entries()) {
+            if (sockId === socket.id) {
+                users.delete(userId);
+                break;
+            }
+        }
+    });
+});
 
 const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174']
 
@@ -49,7 +93,7 @@ mongoose.connection.on("disconnected", () => {
     console.log("mongoDB disconnected!");
 })
 
-app.listen(3000, () => {
-    connect();
-    console.log('Connected to backend!');
-})
+server.listen(3001, async () => {
+    await connect();
+    console.log('Server and Socket are running on port 3001');
+});

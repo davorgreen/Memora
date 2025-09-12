@@ -6,3 +6,8 @@ export interface User {
 	isAdmin?: boolean;
 	friends?: string[];
 }
+
+export interface Message {
+	from: string;
+	text: string;
+}
