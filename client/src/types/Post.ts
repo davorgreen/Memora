@@ -36,3 +36,12 @@ export type Comment = {
 	comment: string;
 	createdAt: string;
 };
+
+export type Notification = {
+	userId: string;
+	fromUserId: string;
+	postId: string;
+	message: string;
+	read: boolean;
+	createdAt: string;
+};

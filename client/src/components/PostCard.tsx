@@ -129,6 +129,7 @@ const PostCard = () => {
 					: []
 			);
 		} catch (err) {
+			console.error('Like post error:', err);
 			if (axios.isAxiosError(err)) {
 				const message = err.response?.data?.message || err.message;
 				toast.error(message);

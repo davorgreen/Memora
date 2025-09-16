@@ -7,7 +7,10 @@ import { toast } from 'react-toastify';
 import { ClipLoader } from 'react-spinners';
 import { useEffect, useState } from 'react';
 import type { Message } from '../types/User';
+import type { Notification } from '../types/Post';
 import socket from '../services/socket';
+import api from '../services/axios';
+import axios from 'axios';
 
 const Navbar = () => {
 	const navigate = useNavigate();
@@ -17,11 +20,19 @@ const Navbar = () => {
 	const [showNotifications, setShowNotifications] =
 		useState<boolean>(false);
 	const [showChat, setShowChat] = useState<boolean>(false);
+	const [errorNotifications, setErrorNotifications] = useState<
+		string | null
+	>(null);
 
 	useEffect(() => {
-		if (!user?._id) return;
+		const handleConnect = () => {
+			if (user?._id) {
+				socket.emit('register', user._id);
+				console.log('User re-registered:', user._id);
+			}
+		};
 
-		socket.emit('register', user._id);
+		socket.on('connect', handleConnect);
 
 		socket.on('like-notification', (data) => {
 			setNotifications((prev) => [...prev, data.message]);
@@ -34,7 +45,30 @@ const Navbar = () => {
 			]);
 		});
 
+		const fetchNotifications = async () => {
+			if (!user?._id) return;
+			try {
+				const res = await api.get(`/notifications/${user._id}`);
+				const data = await res.data;
+				if (data.length > 0) {
+					setNotifications((prev) => [
+						...prev,
+						...data.map((n: Notification) => n.message),
+					]);
+				}
+			} catch (err) {
+				if (axios.isAxiosError(err)) {
+					const message = err.response?.data?.message || err.message;
+					setErrorNotifications(message);
+					toast.error(message);
+				}
+			}
+		};
+
+		fetchNotifications();
+
 		return () => {
+			socket.off('connect', handleConnect);
 			socket.off('like-notification');
 			socket.off('receive-message');
 		};
@@ -55,7 +89,17 @@ const Navbar = () => {
 			</p>
 		);
 
+	if (errorNotifications)
+		return (
+			<p className='font-bold text-2xl text-red-600'>
+				Error: {errorNotifications}
+			</p>
+		);
+
 	const handleLogout = () => {
+		if (socket && user?._id) {
+			socket.emit('logout', user._id);
+		}
 		logout();
 		toast.success('Logout successful!');
 		navigate('/login');

@@ -4,6 +4,7 @@ import mongoose from 'mongoose'
 import authRoute from './routes/auth.js'
 import usersRoute from './routes/users.js'
 import postsRoute from "./routes/post.js"
+import notificationsRoute from "./routes/notification.js"
 import cookieParser from 'cookie-parser'
 import cors from "cors";
 import http from "http"
@@ -23,25 +24,25 @@ io.on("connection", (socket) => {
         console.log(`User ${userId} registered on socket ${socket.id}`);
     });
 
-    socket.on("send-like", ({ fromUserId, toUserId }) => {
-        const receiverSocket = users.get(toUserId);
-        if (receiverSocket) {
-            io.to(receiverSocket).emit("like-notification", {
-                message: `User ${fromUserId} liked your post!`,
-                fromUserId,
-            });
-        }
-    });
-
-    socket.on("send-message", ({ fromUserId, toUserId, text }) => {
-        const receiverSocket = users.get(toUserId);
-        if (receiverSocket) {
-            io.to(receiverSocket).emit("receive-message", {
-                fromUserId,
-                text,
-            });
-        }
-    });
+    /*  socket.on("send-like", ({ fromUserId, toUserId }) => {
+          const receiverSocket = users.get(toUserId);
+          if (receiverSocket) {
+              io.to(receiverSocket).emit("like-notification", {
+                  message: `User ${fromUserId} liked your post!`,
+                  fromUserId,
+              });
+          }
+      });
+  
+      socket.on("send-message", ({ fromUserId, toUserId, text }) => {
+          const receiverSocket = users.get(toUserId);
+          if (receiverSocket) {
+              io.to(receiverSocket).emit("receive-message", {
+                  fromUserId,
+                  text,
+              });
+          }
+      });*/
 
     socket.on("disconnect", () => {
         console.log("User disconnected:", socket.id);
@@ -51,6 +52,11 @@ io.on("connection", (socket) => {
                 break;
             }
         }
+    });
+    socket.on("logout", (userId) => {
+        users.delete(userId);
+        console.log("User logged out:", userId);
+        socket.disconnect();
     });
 });
 
@@ -77,6 +83,7 @@ app.use(express.json());
 app.use("/api/auth", authRoute);
 app.use("/api/users", usersRoute);
 app.use("/api/posts", postsRoute);
+app.use("/api/notifications", notificationsRoute)
 
 app.use((err, req, res, next) => {
     const errorStatus = err.status || 500

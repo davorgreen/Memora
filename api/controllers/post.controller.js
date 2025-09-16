@@ -2,6 +2,7 @@ import Post from "../models/Post.js"
 import User from "../models/User.js"
 import cloudinary, { uploadBase64Image } from "../utils/cloudinary.js";
 import { getSocket, users } from "../socket.js";
+import Notification from "../models/Notification.js";
 
 //create post
 export const createPost = async (req, res, next) => {
@@ -144,7 +145,15 @@ export const handleLikePost = async (req, res, next) => {
                 fromUserId: userId,
                 postId: post._id,
             });
-        }
+        } else {
+            await Notification.create({
+                userId: toUserId,
+                fromUserId: userId,
+                postId: post._id,
+                read: false,
+                message: `${username} liked your post!`,
+            })
+        };
 
         return res.status(200).json({
             message: "Like added",
