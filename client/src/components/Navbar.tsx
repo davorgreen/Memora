@@ -15,7 +15,9 @@ import axios from 'axios';
 const Navbar = () => {
 	const navigate = useNavigate();
 	const { logout, errorUser, loadingUser, user } = useUser();
-	const [notifications, setNotifications] = useState<string[]>([]);
+	const [notifications, setNotifications] = useState<Notification[]>(
+		[]
+	);
 	const [messages, setMessages] = useState<Message[]>([]);
 	const [showNotifications, setShowNotifications] =
 		useState<boolean>(false);
@@ -25,17 +27,25 @@ const Navbar = () => {
 	>(null);
 
 	useEffect(() => {
+		if (!user?._id) return;
+
+		if (socket.connected) {
+			socket.emit('register', user._id);
+			console.log('User registered immediately:', user._id);
+		}
+
 		const handleConnect = () => {
-			if (user?._id) {
-				socket.emit('register', user._id);
-				console.log('User re-registered:', user._id);
-			}
+			socket.emit('register', user._id);
+			console.log('User re-registered:', user._id);
 		};
 
 		socket.on('connect', handleConnect);
 
-		socket.on('like-notification', (data) => {
-			setNotifications((prev) => [...prev, data.message]);
+		socket.on('like-notification', (data: Notification) => {
+			setNotifications((prev) => {
+				if (prev.some((n) => n._id === data._id)) return prev;
+				return [...prev, data];
+			});
 		});
 
 		socket.on('receive-message', (data) => {
@@ -46,16 +56,16 @@ const Navbar = () => {
 		});
 
 		const fetchNotifications = async () => {
-			if (!user?._id) return;
 			try {
 				const res = await api.get(`/notifications/${user._id}`);
-				const data = await res.data;
-				if (data.length > 0) {
-					setNotifications((prev) => [
-						...prev,
-						...data.map((n: Notification) => n.message),
-					]);
-				}
+				const data: Notification[] = res.data;
+
+				setNotifications((prev) => {
+					const newOnes = data.filter(
+						(n) => !prev.some((p) => p._id === n._id)
+					);
+					return [...prev, ...newOnes];
+				});
 			} catch (err) {
 				if (axios.isAxiosError(err)) {
 					const message = err.response?.data?.message || err.message;
@@ -128,7 +138,7 @@ const Navbar = () => {
 						<ul>
 							{notifications.map((n, i) => (
 								<li key={i} className='border-b py-1'>
-									{n}
+									{n.message}
 								</li>
 							))}
 						</ul>

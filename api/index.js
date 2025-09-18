@@ -20,7 +20,10 @@ io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
 
     socket.on("register", (userId) => {
-        users.set(userId, socket.id);
+        if (!users.has(userId)) {
+            users.set(userId, new Set())
+        }
+        users.get(userId).add(socket.id)
         console.log(`User ${userId} registered on socket ${socket.id}`);
     });
 
@@ -46,10 +49,10 @@ io.on("connection", (socket) => {
 
     socket.on("disconnect", () => {
         console.log("User disconnected:", socket.id);
-        for (let [userId, sockId] of users.entries()) {
-            if (sockId === socket.id) {
-                users.delete(userId);
-                break;
+        for (let [userId, socketIds] of users.entries()) {
+            socketIds.delete(socket.id);
+            if (socketIds.size === 0) {
+                users.delete(userId)
             }
         }
     });

@@ -138,12 +138,14 @@ export const handleLikePost = async (req, res, next) => {
         const username = likingUser.username;
 
         const toUserId = post.userId.toString();
-        const receiverSocket = users.get(toUserId);
-        if (receiverSocket) {
-            io.to(receiverSocket).emit("like-notification", {
-                message: `User ${username} liked your post!`,
-                fromUserId: userId,
-                postId: post._id,
+        const receiverSockets = users.get(toUserId);
+        if (receiverSockets) {
+            receiverSockets.forEach(sockId => {
+                io.to(sockId).emit("like-notification", {
+                    message: `User ${username} liked your post!`,
+                    fromUserId: userId,
+                    postid: post.id,
+                });
             });
         } else {
             await Notification.create({
